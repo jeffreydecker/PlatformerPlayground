@@ -95,15 +95,15 @@ public class CharacterController : MonoBehaviour {
                 dashTime -= Time.deltaTime;
                 if (dashTime <= 0) {
                     dashing = false;
-                } else {
-                    // TODO - We need to know what direction we're facing
+					gameObject.GetComponent<Rigidbody2D> ().constraints = RigidbodyConstraints2D.None;
+				} else {
                     movement.x = (float) currentDirection * dashSpeed;
                 }
             } else if (Input.GetKeyDown(KeyCode.LeftShift)) {
                 dashing = true;
                 dashTime = dashDuration;
-                // TODO - We need to know what direction we're facing
                 movement.x = (float) currentDirection * dashSpeed;
+				gameObject.GetComponent<Rigidbody2D> ().constraints = RigidbodyConstraints2D.FreezePositionY;
             }
         }
 
