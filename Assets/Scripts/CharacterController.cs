@@ -169,6 +169,10 @@ public class CharacterController : MonoBehaviour {
 		return false;
 	}
 
+	public bool IsDashing () {
+		return dashing;
+	}
+
 	private bool ShouldDie () {
 		// Check front collision with ground
 
