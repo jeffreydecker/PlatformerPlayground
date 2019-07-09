@@ -52,3 +52,7 @@ public interface IPlatformDimensions {
 	/// </returns>
 	Vector2 RightBound ();
 }
+
+public interface IDestroyable {
+	void Destroy ();
+}

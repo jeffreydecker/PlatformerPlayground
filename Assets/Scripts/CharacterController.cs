@@ -4,109 +4,177 @@ using UnityEngine;
 
 public class CharacterController : MonoBehaviour {
 
-    // Componenets
+	// Componenets
+	[SerializeField]
+	private Rigidbody2D rb2d;
 
-    public Rigidbody2D rb2d;
+	// Grounded
+	[SerializeField]
+	private GameObject groundedPoint;
+	[SerializeField]
+	private Vector2 groundedBoxDimens = new Vector2 (0.25f, 0.25f);
 
-    // Move
+	// Move
+	private bool shouldMove;
 
-    public float forwardSpeed = 0f;
-    bool movingForward = false;
-    public float backwardSpeed = 0f;
-    bool movingBackward = false;
-    public bool automaticMovement = false;
-    public Direction currentDirection = Direction.Right;
+	[SerializeField]
+	private float forwardSpeed = 0f;
+	private bool movingForward = false;
+	[SerializeField]
+	private float backwardSpeed = 0f;
+	private bool movingBackward = false;
+	[SerializeField]
+	private bool automaticMovement = false;
+	[SerializeField]
+	private Direction currentDirection = Direction.Right;
 
-    public enum Direction {
-        Left = -1,
-        Right = 1,
-    }
+	public enum Direction {
+		Left = -1,
+		Right = 1,
+	}
 
-    // Jump
+	// Jump
+	private bool shouldJump = false;
+	private bool shouldDoubleJump = false;
 
-    public bool enableJump = false;
-    bool canJump = true;
-    public float jumpForce = 0f;
-    public bool enableDoubleJump = false;
-    bool canDoubleJump = false;
-    public float doubleJumpForce = 0f;
+	[SerializeField]
+	private bool enableJump = false;
+	private bool canJump = true;
+	[SerializeField]
+	private float jumpForce = 0f;
+	[SerializeField]
+	private bool enableDoubleJump = false;
+	private bool canDoubleJump = false;
+	[SerializeField]
+	private float doubleJumpForce = 0f;
 
-    // Pulse
+	// Pulse
+	[SerializeField]
+	private bool enablePulse = false;
+	[SerializeField]
+	private float pulseForce = 0f;
 
-    public bool enablePulse = false;
-    public float pulseForce = 0f;
+	// Charge/Dash
+	private bool shouldDash = false;
 
-    // Charge/Dash
+	[SerializeField]
+	private bool enableDash = false;
+	[SerializeField]
+	private float dashSpeed = 0f;
+	[SerializeField]
+	private float dashDuration = 0f;
+	private bool dashing = false;
+	private float dashTime = 0f;
 
-    public bool enableDash = false;
-    public float dashSpeed = 0f;
-    public float dashDuration = 0f;
-    bool dashing = false;
-    float dashTime = 0f;
+	void Start () {
 
-    // Start is called before the first frame update
-    void Start() {
+	}
 
-    }
+	void Update () {
+		CheckInput ();
+	}
 
-    // Update is called once per frame
-    void Update() {
-        CheckInput();
-    }
+	private void FixedUpdate () {
+		ApplyMovement ();
+	}
 
-    private void FixedUpdate() {
+	void CheckInput () {
+		if (!automaticMovement) {
+			float axis = Input.GetAxis ("Horizontal");
+			if (axis > 0) {
+				currentDirection = Direction.Right;
+				shouldMove = true;
+			} else if (axis < 0) {
+				currentDirection = Direction.Left;
+				shouldMove = true;
+			}
+		} else {
+			shouldMove = true;
+		}
 
-    }
+		if (enableJump) {
+			// TODO - There is a potential for jumping being done twice so we might want to check velocity but that will negate the fuzzy grounded handling we have
+			// TODO - We might want to set can double jump on ground collisions so if the user misses their jump they can still double jump to try and recover
+			if (Input.GetButtonDown ("Jump") && IsGrounded ()) {
+				shouldJump = true;
+				canDoubleJump = true;
+			} else if (enableDoubleJump && canDoubleJump && Input.GetButtonDown ("Jump")) {
+				canDoubleJump = false;
+				shouldDoubleJump = true;
+			}
+		}
 
-    void CheckInput() {
+		if (enablePulse) {
+			// TODO - Handle Pulse
+		}
 
-        Vector2 movement = rb2d.velocity;
+		if (enableDash) {
+			if (!dashing && Input.GetKeyDown (KeyCode.LeftShift)) {
+				dashing = true;
+				shouldDash = true;
+				dashTime = dashDuration;
+			}
+		}
+	}
 
-        if (!automaticMovement) {
-            float axis = Input.GetAxis("Horizontal");
-            movement.x = axis * forwardSpeed;
-            if (axis > 0) {
-                currentDirection = Direction.Right;
-            } else if (axis < 0) {
-                currentDirection = Direction.Left;
-            }
-        } else {
-            movement.x = (float) currentDirection * forwardSpeed;
-        }
+	private void ApplyMovement () {
+		Vector2 movement = rb2d.velocity;
 
-        if (enableJump) {
-            if (Input.GetButtonDown("Jump")) {
-                movement.y = jumpForce;
-                Debug.Log("Get Axis Hor: " + Input.GetAxis("Vertical"));
-            }
+		if (shouldMove) {
+			movement.x = (float)currentDirection * forwardSpeed;
+			shouldMove = false;
+		} else {
+			movement.x = 0;
+		}
 
-            if (enableDoubleJump && canDoubleJump) {
+		if (shouldJump) {
+			movement.y = jumpForce;
+			shouldJump = false;
+		}
 
-            }
+		if (shouldDoubleJump) {
+			movement.y = doubleJumpForce;
+			shouldDoubleJump = false;
+		}
 
-        }
-
-        if (enablePulse) {
-            // TODO - Handle Pulse
-        }
-
-        if (enableDash) {
-            if (dashing) {
-                dashTime -= Time.deltaTime;
-                if (dashTime <= 0) {
-                    dashing = false;
+		if (dashing) {
+			if (shouldDash) {
+				shouldDash = false;
+				dashTime = dashDuration;
+				movement.x = (float)currentDirection * dashSpeed;
+				gameObject.GetComponent<Rigidbody2D> ().constraints = RigidbodyConstraints2D.FreezePositionY;
+			} else {
+				dashTime -= Time.fixedDeltaTime;
+				if (dashTime <= 0) {
+					dashing = false;
 					gameObject.GetComponent<Rigidbody2D> ().constraints = RigidbodyConstraints2D.None;
 				} else {
-                    movement.x = (float) currentDirection * dashSpeed;
-                }
-            } else if (Input.GetKeyDown(KeyCode.LeftShift)) {
-                dashing = true;
-                dashTime = dashDuration;
-                movement.x = (float) currentDirection * dashSpeed;
-				gameObject.GetComponent<Rigidbody2D> ().constraints = RigidbodyConstraints2D.FreezePositionY;
-            }
-        }
+					movement.x = (float)currentDirection * dashSpeed;
+				}
+			}
+		}
 
-        rb2d.velocity = movement;
-    }
+		rb2d.velocity = movement;
+	}
+
+	private bool IsGrounded () {
+		if (rb2d.velocity.y <= 0) {
+			Collider2D [] collisions = Physics2D.OverlapBoxAll (groundedPoint.transform.position, groundedBoxDimens, 0f);
+			foreach (Collider2D col in collisions) {
+				if (col.gameObject.tag == "Platform") {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	private bool ShouldDie () {
+		// Check front collision with ground
+
+		// Check front collision with enemy
+
+		return false;
+	}
+
 }
