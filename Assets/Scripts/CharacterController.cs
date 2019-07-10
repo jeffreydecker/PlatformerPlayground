@@ -2,10 +2,10 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+[RequireComponent (typeof (Rigidbody2D))]
 public class CharacterController : MonoBehaviour {
 
 	// Componenets
-	[SerializeField]
 	private Rigidbody2D rb2d;
 
 	// Grounded
@@ -19,10 +19,8 @@ public class CharacterController : MonoBehaviour {
 
 	[SerializeField]
 	private float forwardSpeed = 0f;
-	private bool movingForward = false;
 	[SerializeField]
 	private float backwardSpeed = 0f;
-	private bool movingBackward = false;
 	[SerializeField]
 	private bool automaticMovement = false;
 	[SerializeField]
@@ -39,7 +37,6 @@ public class CharacterController : MonoBehaviour {
 
 	[SerializeField]
 	private bool enableJump = false;
-	private bool canJump = true;
 	[SerializeField]
 	private float jumpForce = 0f;
 	[SerializeField]
@@ -67,7 +64,7 @@ public class CharacterController : MonoBehaviour {
 	private float dashTime = 0f;
 
 	void Start () {
-
+		rb2d = GetComponent<Rigidbody2D> ();
 	}
 
 	void Update () {
@@ -80,7 +77,7 @@ public class CharacterController : MonoBehaviour {
 
 	void CheckInput () {
 		if (!automaticMovement) {
-			float axis = Input.GetAxis ("Horizontal");
+			float axis = Input.GetAxisRaw ("Horizontal");
 			if (axis > 0) {
 				currentDirection = Direction.Right;
 				shouldMove = true;
@@ -179,6 +176,22 @@ public class CharacterController : MonoBehaviour {
 		// Check front collision with enemy
 
 		return false;
+	}
+
+	private void OnCollisionEnter2D (Collision2D collision) {
+		// TODO - Do a death check
+	}
+
+	private void OnTriggerEnter2D (Collider2D collision) {
+		if (collision.gameObject.tag == "Destroyable" && dashing) {
+			DestroyableController dc = collision.gameObject.GetComponent<DestroyableController> ();
+			if (dc != null) {
+				Debug.Log ("Trigger");
+				dc.DashDestroy ();
+			}
+		}
+
+		// TODO - Do a death check
 	}
 
 }
