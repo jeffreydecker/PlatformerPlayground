@@ -14,6 +14,12 @@ public class CharacterController : MonoBehaviour {
 	[SerializeField]
 	private Vector2 groundedBoxDimens = new Vector2 (0.25f, 0.25f);
 
+	// Hit
+	[SerializeField]
+	private GameObject rightHitPoint;
+	[SerializeField]
+	private Vector2 hitPointBoxDimens = new Vector2 (0.6f, 1.0f);
+
 	// Move
 	private bool shouldMove;
 
@@ -154,6 +160,10 @@ public class CharacterController : MonoBehaviour {
 		rb2d.velocity = movement;
 	}
 
+	public bool IsDashing () {
+		return dashing;
+	}
+
 	private bool IsGrounded () {
 		if (rb2d.velocity.y <= 0) {
 			Collider2D [] collisions = Physics2D.OverlapBoxAll (groundedPoint.transform.position, groundedBoxDimens, 0f);
@@ -166,32 +176,36 @@ public class CharacterController : MonoBehaviour {
 		return false;
 	}
 
-	public bool IsDashing () {
-		return dashing;
-	}
-
 	private bool ShouldDie () {
-		// Check front collision with ground
-
-		// Check front collision with enemy
-
+		Collider2D [] collisions = Physics2D.OverlapBoxAll (rightHitPoint.transform.position, hitPointBoxDimens, 0f);
+		foreach (Collider2D col in collisions) {
+			if (col.gameObject.tag == "Platform") {
+				return true;
+			}
+		}
 		return false;
 	}
 
 	private void OnCollisionEnter2D (Collision2D collision) {
-		// TODO - Do a death check
+		if (collision.gameObject.tag == "Platform") {
+			ContactPoint2D contact = collision.GetContact (0);
+			if (ShouldDie ()) {
+				Debug.Log ("Die Please");
+			}
+		}
 	}
 
 	private void OnTriggerEnter2D (Collider2D collision) {
-		if (collision.gameObject.tag == "Destroyable" && dashing) {
-			DestroyableController dc = collision.gameObject.GetComponent<DestroyableController> ();
-			if (dc != null) {
-				Debug.Log ("Trigger");
-				dc.DashDestroy ();
+		if (collision.gameObject.tag == "Destroyable") {
+			if (dashing) {
+				DestroyableController dc = collision.gameObject.GetComponent<DestroyableController> ();
+				if (dc != null) {
+					dc.DashDestroy ();
+				}
+			} else {
+				Debug.Log ("Die Please");
 			}
 		}
-
-		// TODO - Do a death check
 	}
 
 }

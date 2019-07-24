@@ -7,8 +7,13 @@ public class LevelController : MonoBehaviour {
 
 	public List<GameObject> activePlatforms;
 
-	public float gapDistance = 2;
-	//public float [] gapDistances = {1, 2}; 
+	[SerializeField]
+	private float gapDistance = 3.5f;
+	[SerializeField]
+	private float gapDistanceM = 7f;
+	[SerializeField]
+	private float gapDistanceL = 10f;
+	//public float [] gapDistances = { 1, 2 };
 
 	public float viewThreshold = 5;
 
@@ -30,6 +35,9 @@ public class LevelController : MonoBehaviour {
     }
 
 	void AddPlatforms() {
+		if (activePlatforms.Count == 0) {
+			return;
+		}
 		PlatformController lastPlatform = activePlatforms [activePlatforms.Count - 1].GetComponent<PlatformController> ();
 		Vector2 leftBound = lastPlatform.LeftBound ();
 		if (leftBound.x < (cam.transform.position.x + (viewWidth / 2) + viewThreshold)) {
