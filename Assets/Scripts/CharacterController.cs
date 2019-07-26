@@ -7,6 +7,18 @@ public class CharacterController : MonoBehaviour {
 
 	// Componenets
 	private Rigidbody2D rb2d;
+	private Animator animator;
+	[SerializeField]
+	private GameObject landParticles;
+	[SerializeField]
+	private IPlayerDelegate playerDelegate;
+
+	// Death
+	private bool isDead = false;
+
+	// Falling
+	[SerializeField]
+	private float minHeight = -3f;
 
 	// Grounded
 	[SerializeField]
@@ -71,13 +83,29 @@ public class CharacterController : MonoBehaviour {
 
 	void Start () {
 		rb2d = GetComponent<Rigidbody2D> ();
+		animator = GetComponent<Animator> ();
 	}
 
 	void Update () {
+		// Anything that should still be done after death goes here
+
+		// Anything that should not be done when dead goes here
+		if (isDead) return;
+
+		if (gameObject.transform.position.y <= minHeight) {
+			Die ();
+			return;
+		}
+
 		CheckInput ();
 	}
 
 	private void FixedUpdate () {
+		// Anything that should still be done after death goes here
+
+		// Anything that should not be done when dead goes here
+		if (isDead) return;
+
 		ApplyMovement ();
 	}
 
@@ -101,9 +129,11 @@ public class CharacterController : MonoBehaviour {
 			if (Input.GetButtonDown ("Jump") && IsGrounded ()) {
 				shouldJump = true;
 				canDoubleJump = true;
+				animator.SetBool ("jumping", true);
 			} else if (enableDoubleJump && canDoubleJump && Input.GetButtonDown ("Jump")) {
 				canDoubleJump = false;
 				shouldDoubleJump = true;
+				animator.Play ("PlayerJump", 0, 0f);
 			}
 		}
 
@@ -190,8 +220,14 @@ public class CharacterController : MonoBehaviour {
 		if (collision.gameObject.tag == "Platform") {
 			ContactPoint2D contact = collision.GetContact (0);
 			if (ShouldDie ()) {
-				Debug.Log ("Die Please");
+				Die ();
 			}
+		}
+
+		if (animator.GetBool ("jumping") && IsGrounded ()) {
+			animator.SetBool ("jumping", false);
+			animator.SetTrigger ("land");
+			Instantiate (landParticles, gameObject.transform.position - new Vector3 (0, 0.5f), Quaternion.identity);
 		}
 	}
 
@@ -203,9 +239,16 @@ public class CharacterController : MonoBehaviour {
 					dc.DashDestroy ();
 				}
 			} else {
-				Debug.Log ("Die Please");
+				Die ();
 			}
 		}
+	}
+
+	private void Die () {
+		Debug.Log ("Die Please");
+		isDead = true;
+		gameObject.GetComponent<Rigidbody2D> ().constraints = RigidbodyConstraints2D.FreezeAll;
+		playerDelegate?.OnDeath ();
 	}
 
 }

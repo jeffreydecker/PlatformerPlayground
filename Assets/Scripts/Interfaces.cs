@@ -56,3 +56,9 @@ public interface IPlatformDimensions {
 public interface IDestroyable {
 	void Destroy ();
 }
+
+public interface IPlayerDelegate {
+	void OnCollect ();
+	void OnAttack ();
+	void OnDeath ();
+}
