@@ -13,6 +13,10 @@ public class CharacterController : MonoBehaviour {
 	[SerializeField]
 	private IPlayerDelegate playerDelegate;
 
+	// Size
+	[SerializeField]
+	private Vector2 dimensions = new Vector2(1f, 1f);
+
 	// Death
 	private bool isDead = false;
 
@@ -206,6 +210,7 @@ public class CharacterController : MonoBehaviour {
 		return false;
 	}
 
+	// 
 	private bool ShouldDie () {
 		Collider2D [] collisions = Physics2D.OverlapBoxAll (rightHitPoint.transform.position, hitPointBoxDimens, 0f);
 		foreach (Collider2D col in collisions) {
@@ -216,9 +221,21 @@ public class CharacterController : MonoBehaviour {
 		return false;
 	}
 
+	//private bool ShouldDie (ContactPoint2D contact) {
+	//	Debug.LogFormat ("Contact: {0}, Transform: {1} Die:{2}", contact.point.x, transform.position.x, !Mathf.Approximately (transform.position.x, contact.point.x));
+	//	Debug.LogFormat ("Contact: {0}, Transform: {1}", contact.point.y, transform.position.y);
+
+	//	bool centered = Mathf.Approximately (contact.point.x, transform.position.x);
+	//	bool top = Mathf.Approximately (contact.point.y - (dimensions.y / 2), transform.position.y);
+	//	bool bottom = Mathf.Approximately (contact.point.y + (dimensions.y / 2), transform.position.y);
+
+	//	return !centered && !top && !bottom;
+	//}
+
 	private void OnCollisionEnter2D (Collision2D collision) {
 		if (collision.gameObject.tag == "Platform") {
-			ContactPoint2D contact = collision.GetContact (0);
+			// TODO - We can probably use contact to determine if we hit a wall or not
+			//ContactPoint2D contact = collision.GetContact (0);
 			if (ShouldDie ()) {
 				Die ();
 			}
